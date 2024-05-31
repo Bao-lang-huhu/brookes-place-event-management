@@ -1,9 +1,9 @@
-// src/components/HomePage.js
+// src/components/GuestPage.js
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
 
-function HomePage() {
+function GuestPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
     const auth = getAuth();
@@ -30,12 +30,10 @@ function HomePage() {
                 <nav>
                     <div className="logo">BROOKES PLACE</div>
                     <ul>
-                        <li><Link to="/admin-home">HOME</Link></li>
-                        <li><Link to="/event-lists">EVENT LISTS</Link></li>
-                        <li><Link to="/event-planner">EVENT PLANNER</Link></li>
+                        <li><Link to="/">HOME</Link></li>
                         {isLoggedIn ? (
                             <>
-                               
+                                <li><Link to="/profile">PROFILE</Link></li>
                                 <li><button onClick={handleSignOut}>SIGN OUT</button></li>
                             </>
                         ) : (
@@ -58,4 +56,4 @@ function HomePage() {
     );
 }
 
-export default HomePage;
+export default GuestPage;

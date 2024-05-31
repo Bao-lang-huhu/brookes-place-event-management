@@ -1,3 +1,4 @@
+// src/components/auth.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, database } from '../firebase';
@@ -76,7 +77,11 @@ function AuthPage() {
 
             setMessage('Login successful! Redirecting to home page...');
             setTimeout(() => {
-                navigate('/');
+                if (email === 'eolartfred@gmail.com' && password === 'ADMIN123') {
+                    navigate('/admin-home');
+                } else {
+                    navigate('/');
+                }
             }, 2000);
         } catch (error) {
             setMessage(`Login failed: ${error.message}`);
