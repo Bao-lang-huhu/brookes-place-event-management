@@ -9,6 +9,7 @@ function EventCreate() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [status, setStatus] = useState('pending');
+  const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
@@ -29,6 +30,7 @@ function EventCreate() {
         date: date,
         time: time,
         status: status,
+        userId: userId || null  // Allow userId to be null if not provided
       });
 
       setMessage('Event added successfully!');
@@ -77,9 +79,15 @@ function EventCreate() {
           required
         >
           <option value="pending">Pending</option>
-          <option value="accepted">Accepted</option>
-          <option value="declined">Declined</option>
+          <option value="Booked">Booked</option>
+          <option value="Cancelled">Cancelled</option>
         </select>
+        <input
+          type="text"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          placeholder="User ID (optional)"
+        />
         <button type="submit">Confirm</button>
       </form>
     </div>

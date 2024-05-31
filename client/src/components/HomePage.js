@@ -1,8 +1,26 @@
 // src/components/HomePage.js
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 function HomePage() {
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const handleSignOut = async () => {
+        await signOut(auth);
+        navigate('/auth');
+    };
+
     return (
         <div>
             <header>
@@ -12,7 +30,11 @@ function HomePage() {
                         <li><Link to="/">HOME</Link></li>
                         <li><Link to="/event-lists">EVENT LISTS</Link></li>
                         <li><Link to="/event-planner">EVENT PLANNER</Link></li>
-                        <li><Link to="/auth">SIGN IN</Link></li> {/* Ensure this path is correct */}
+                        {user ? (
+                            <li><button onClick={handleSignOut}>SIGN OUT</button></li>
+                        ) : (
+                            <li><Link to="/auth">SIGN IN</Link></li>
+                        )}
                     </ul>
                 </nav>
             </header>

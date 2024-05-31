@@ -1,10 +1,28 @@
-// src/components/auth.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, database } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import bcrypt from 'bcryptjs';
+
+// Helper function to generate a user ID
+function generateUserId() {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    let userId = '';
+
+    // Generate three random capital letters
+    for (let i = 0; i < 3; i++) {
+        userId += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+
+    // Generate three random numbers
+    for (let i = 0; i < 3; i++) {
+        userId += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    }
+
+    return userId;
+}
 
 function AuthPage() {
     const [email, setEmail] = useState('');
@@ -27,7 +45,10 @@ function AuthPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            const userId = generateUserId();
+
             await set(ref(database, 'users/' + user.uid), {
+                userId: userId,
                 username: username,
                 email: email,
                 password: hashedPassword,

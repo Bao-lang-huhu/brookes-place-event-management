@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue, update } from 'firebase/database';
+import { getDatabase, ref, onValue, update, remove } from 'firebase/database';
 import { database } from '../firebase';
 
 function EventList() {
@@ -61,6 +61,23 @@ function EventList() {
       }, 2000);
     } catch (error) {
       setMessage(`Failed to update event: ${error.message}`);
+    }
+  };
+
+  const handleDeleteClick = async (eventId) => {
+    const confirmAction = window.confirm("Do you really want to delete this event?");
+    if (!confirmAction) {
+      return;
+    }
+
+    try {
+      await remove(ref(database, `events/${eventId}`));
+      setMessage('Event deleted successfully!');
+      setTimeout(() => {
+        setMessage('');
+      }, 2000);
+    } catch (error) {
+      setMessage(`Failed to delete event: ${error.message}`);
     }
   };
 
@@ -138,8 +155,8 @@ function EventList() {
                     onChange={handleChange}
                   >
                     <option value="pending">Pending</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="declined">Declined</option>
+                    <option value="Booked">Booked</option>
+                    <option value="Cancelled">Cancelled</option>
                   </select>
                 ) : (
                   event.status
@@ -147,9 +164,15 @@ function EventList() {
               </td>
               <td>
                 {editEventId === event.id ? (
-                  <button onClick={handleSaveClick}>Save</button>
+                  <>
+                    <button onClick={handleSaveClick}>Save</button>
+                    <button onClick={() => setEditEventId(null)}>Cancel</button>
+                  </>
                 ) : (
-                  <button onClick={() => handleEditClick(event)}>Edit</button>
+                  <>
+                    <button onClick={() => handleEditClick(event)}>Edit</button>
+                    <button onClick={() => handleDeleteClick(event.id)}>Delete</button>
+                  </>
                 )}
               </td>
             </tr>
