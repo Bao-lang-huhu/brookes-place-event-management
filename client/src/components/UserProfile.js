@@ -6,6 +6,7 @@ import { database } from '../firebase';
 function UserProfile() {
   const [events, setEvents] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [username, setUsername] = useState(null);
   const auth = getAuth();
 
   useEffect(() => {
@@ -28,6 +29,7 @@ function UserProfile() {
       console.log("User data from Firebase:", userData); // Debugging: Log user data
       if (userData) {
         setUserId(userData.userId);
+        setUsername(userData.username);
         fetchUserEvents(userData.userId);
       } else {
         console.log("No user data found for UID:", uid);
@@ -60,15 +62,21 @@ function UserProfile() {
   return (
     <div>
       <h2>User Profile</h2>
+      {username && userId && (
+        <div>
+          <p><strong>Username:</strong> {username}</p>
+          <p><strong>User ID:</strong> {userId}</p>
+        </div>
+      )}
       <h3>Reserved Events</h3>
       {events.length > 0 ? (
         <table>
           <thead>
             <tr>
               <th>Customer Name</th>
-              <th>Username</th>
               <th>Date</th>
-              <th>Time</th>
+              <th>Start Time</th>
+              <th>End Time</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -76,9 +84,9 @@ function UserProfile() {
             {events.map((event) => (
               <tr key={event.id}>
                 <td>{event.customerName}</td>
-                <td>{event.username}</td>
                 <td>{event.date}</td>
-                <td>{event.time}</td>
+                <td>{event.startTime}</td>
+                <td>{event.endTime}</td>
                 <td>{event.status}</td>
               </tr>
             ))}

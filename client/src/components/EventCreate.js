@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
-import { getDatabase, ref, push, set } from 'firebase/database';
-import { useNavigate } from 'react-router-dom';
+import { ref, push, set, get } from 'firebase/database';
 import { database } from '../firebase';
 
 function EventCreate() {
   const [customerName, setCustomerName] = useState('');
   const [username, setUsername] = useState('');
   const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [status, setStatus] = useState('pending');
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     const confirmAction = window.confirm("Do you want to add this event?");
     if (!confirmAction) {
       return;
@@ -23,20 +22,44 @@ function EventCreate() {
 
     try {
       const eventsRef = ref(database, 'events');
+      const snapshot = await get(eventsRef);
+      const eventsData = snapshot.val();
+
+      if (eventsData) {
+        const eventsOnSameDate = Object.values(eventsData).filter(event => event.date === date);
+        const hasConflict = eventsOnSameDate.some(event => {
+          const eventStart = new Date(`${event.date}T${event.startTime}`);
+          const eventEnd = new Date(`${event.date}T${event.endTime}`);
+          const newEventStart = new Date(`${date}T${startTime}`);
+          const newEventEnd = new Date(`${date}T${endTime}`);
+          return (newEventStart < eventEnd && newEventEnd > eventStart);
+        });
+
+        if (hasConflict) {
+          setMessage('There is a time conflict with another event on the same date.');
+          return;
+        }
+      }
+
       const newEventRef = push(eventsRef);
       await set(newEventRef, {
         customerName: customerName,
         username: username,
         date: date,
-        time: time,
+        startTime: startTime,
+        endTime: endTime,
         status: status,
         userId: userId || null  // Allow userId to be null if not provided
       });
 
       setMessage('Event added successfully!');
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      setCustomerName('');
+      setUsername('');
+      setDate('');
+      setStartTime('');
+      setEndTime('');
+      setStatus('pending');
+      setUserId('');
     } catch (error) {
       setMessage(`Failed to add event: ${error.message}`);
     }
@@ -69,8 +92,14 @@ function EventCreate() {
         />
         <input
           type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          required
+        />
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
           required
         />
         <select

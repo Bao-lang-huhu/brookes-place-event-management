@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue, update, remove } from 'firebase/database';
+import { ref, onValue, update, remove, get } from 'firebase/database';
 import { database } from '../firebase';
 
 function EventList() {
@@ -9,7 +9,8 @@ function EventList() {
     customerName: '',
     username: '',
     date: '',
-    time: '',
+    startTime: '',
+    endTime: '',
     status: 'pending'
   });
   const [message, setMessage] = useState('');
@@ -34,7 +35,8 @@ function EventList() {
       customerName: event.customerName,
       username: event.username,
       date: event.date,
-      time: event.time,
+      startTime: event.startTime,
+      endTime: event.endTime,
       status: event.status
     });
   };
@@ -53,6 +55,26 @@ function EventList() {
     }
 
     try {
+      const eventsRef = ref(database, 'events');
+      const snapshot = await get(eventsRef);
+      const eventsData = snapshot.val();
+
+      if (eventsData) {
+        const eventsOnSameDate = Object.values(eventsData).filter(event => event.date === editEventData.date && event.id !== editEventId);
+        const hasConflict = eventsOnSameDate.some(event => {
+          const eventStart = new Date(`${event.date}T${event.startTime}`);
+          const eventEnd = new Date(`${event.date}T${event.endTime}`);
+          const newEventStart = new Date(`${editEventData.date}T${editEventData.startTime}`);
+          const newEventEnd = new Date(`${editEventData.date}T${editEventData.endTime}`);
+          return (newEventStart < eventEnd && newEventEnd > eventStart);
+        });
+
+        if (hasConflict) {
+          setMessage('There is a time conflict with another event on the same date.');
+          return;
+        }
+      }
+
       await update(ref(database, `events/${editEventId}`), editEventData);
       setMessage('Event updated successfully!');
       setEditEventId(null);
@@ -91,7 +113,8 @@ function EventList() {
             <th>Customer Name</th>
             <th>Username</th>
             <th>Date</th>
-            <th>Time</th>
+            <th>Start Time</th>
+            <th>End Time</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -139,12 +162,24 @@ function EventList() {
                 {editEventId === event.id ? (
                   <input
                     type="time"
-                    name="time"
-                    value={editEventData.time}
+                    name="startTime"
+                    value={editEventData.startTime}
                     onChange={handleChange}
                   />
                 ) : (
-                  event.time
+                  event.startTime
+                )}
+              </td>
+              <td>
+                {editEventId === event.id ? (
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={editEventData.endTime}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  event.endTime
                 )}
               </td>
               <td>
