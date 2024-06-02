@@ -4,6 +4,7 @@ import { database } from '../firebase';
 
 function EventList() {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [editEventId, setEditEventId] = useState(null);
   const [editEventData, setEditEventData] = useState({
     customerName: '',
@@ -11,9 +12,12 @@ function EventList() {
     date: '',
     startTime: '',
     endTime: '',
-    status: 'pending'
+    status: 'pending',
+    userId: ''
   });
   const [message, setMessage] = useState('');
+  const [searchField, setSearchField] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   useEffect(() => {
     const eventsRef = ref(database, 'events');
@@ -25,6 +29,7 @@ function EventList() {
           ...event
         })).sort((a, b) => new Date(b.date) - new Date(a.date));
         setEvents(sortedEvents);
+        setFilteredEvents(sortedEvents);
       }
     });
   }, []);
@@ -37,7 +42,8 @@ function EventList() {
       date: event.date,
       startTime: event.startTime,
       endTime: event.endTime,
-      status: event.status
+      status: event.status,
+      userId: event.userId || ''
     });
   };
 
@@ -103,10 +109,60 @@ function EventList() {
     }
   };
 
+  const handleSearch = () => {
+    if (!searchField || !searchValue) {
+      setMessage('Please select a search filter and enter a search value.');
+      return;
+    }
+
+    const filtered = events.filter(event => {
+      const fieldValue = event[searchField].toString().toLowerCase();
+      return fieldValue.includes(searchValue.toLowerCase());
+    });
+
+    setFilteredEvents(filtered);
+
+    if (filtered.length > 0) {
+      setMessage('Search successful!');
+    } else {
+      setMessage('No events found matching the search criteria.');
+    }
+  };
+
+  const handleRefresh = () => {
+    setFilteredEvents(events);
+    setSearchField('');
+    setSearchValue('');
+    setMessage('Event list refreshed.');
+    setTimeout(() => {
+      setMessage('');
+    }, 2000);
+  };
+
   return (
     <div>
       <h2>Event List</h2>
       {message && <p>{message}</p>}
+      <div>
+        <select onChange={(e) => setSearchField(e.target.value)} value={searchField}>
+          <option value="">Select Filter</option>
+          <option value="customerName">Customer Name</option>
+          <option value="username">Username</option>
+          <option value="date">Date</option>
+          <option value="startTime">Start Time</option>
+          <option value="endTime">End Time</option>
+          <option value="status">Status</option>
+          <option value="userId">User ID</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
+        <button onClick={handleRefresh}>Refresh</button>
+      </div>
       <table>
         <thead>
           <tr>
@@ -116,11 +172,12 @@ function EventList() {
             <th>Start Time</th>
             <th>End Time</th>
             <th>Status</th>
+            <th>User ID</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <tr key={event.id}>
               <td>
                 {editEventId === event.id ? (
@@ -195,6 +252,18 @@ function EventList() {
                   </select>
                 ) : (
                   event.status
+                )}
+              </td>
+              <td>
+                {editEventId === event.id ? (
+                  <input
+                    type="text"
+                    name="userId"
+                    value={editEventData.userId}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  event.userId
                 )}
               </td>
               <td>
